@@ -6,6 +6,8 @@ use futures::StreamExt;
 use image;
 use image::imageops::FilterType;
 use image::ImageOutputFormat;
+use log;
+use simple_logger;
 
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!!")
@@ -30,6 +32,7 @@ async fn compress_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
         }
         println!("Got filename {}!", filename);
         while let Some(chunk) = field.next().await {
+            // This errors out if there is no data field
             let data = chunk.unwrap();
             let img = image::load_from_memory(&data).unwrap();
             let resized_img = img.resize(1000, 1000, FilterType::Nearest);
@@ -49,13 +52,17 @@ async fn compress_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
+    let host = "0.0.0.0";
+    let port = "8080";
+    let bind = format!("{}:{}", host, port);
     HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(index))
             .route("/upload", web::post().to(compress_file))
             .route("/again", web::get().to(index2))
     })
-    .bind("127.0.0.1:8088")?
+    .bind(bind)?
     .run()
     .await
 }
