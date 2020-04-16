@@ -26,11 +26,6 @@ async fn compress_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
         let headers = field.headers();
         let content_type = field.content_disposition().unwrap();
         let filename = content_type.get_filename().unwrap();
-        if let Some(header) = headers.iter().next() {
-            println!("Got headers {}!", header.0.as_str());
-            println!("Got value {:?}!", header.1.to_str());
-        }
-        println!("Got filename {}!", filename);
         while let Some(chunk) = field.next().await {
             // This errors out if there is no data field
             let data = chunk.unwrap();
@@ -53,6 +48,7 @@ async fn compress_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     simple_logger::init_with_level(log::Level::Info).unwrap();
+    //Make these 
     let host = "0.0.0.0";
     let port = "8080";
     let bind = format!("{}:{}", host, port);
